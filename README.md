@@ -11,7 +11,9 @@ Aquí tienes el texto depurado, eliminando los caracteres especiales y mejorando
 ## Integrantes
 
 Viente Castro
+
 Julian Martínez
+
 Lucas Fernandez
 
 ---
