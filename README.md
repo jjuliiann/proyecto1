@@ -1,8 +1,9 @@
 # Proyecto Ciencia de Datos
 
 ## Integrantes
-- Tu nombre
-- Compañero/a
+- Vicente Castro
+- Lucas Fernandez
+- Julian Martinez
 
 ## Dataset
 Datos de actividad física (pasos por hora)
