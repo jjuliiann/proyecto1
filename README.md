@@ -1,4 +1,4 @@
-Aquí tienes el texto depurado, eliminando los caracteres especiales y mejorando la fluidez para que mantenga un formato profesional y limpio:
+
 
 ---
 
@@ -174,8 +174,9 @@ data/
  |-- processed/
  |   `-- hourlySteps_clean.csv
 
-notebook_proyecto.ipynb
 README.md
+informe_tecnico_defi.docx
+proyecto_cd_final.ipynb
 ```
 
 ---
