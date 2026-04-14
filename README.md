@@ -199,6 +199,3 @@ El proceso desarrollado sigue un flujo real de trabajo en la industria, aseguran
 
 ---
 
-## Autor
-
-Proyecto desarrollado como parte del curso de Programación para la Ciencia de Datos.
