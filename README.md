@@ -199,3 +199,36 @@ El proceso desarrollado sigue un flujo real de trabajo en la industria, aseguran
 
 ---
 
+# Machine Learning Project - Physical Activity Classification
+
+## Descripción
+Proyecto de Machine Learning orientado a clasificar niveles de actividad física utilizando registros horarios de pasos.
+
+## Dataset
+hourlySteps_clean.csv
+
+## Estructura
+- Exploratory Data Analysis
+- Supervised Modeling
+- Model Evaluation
+- Hyperparameter Optimization
+- Final Analysis
+
+## Tecnologías
+- Python
+- Pandas
+- NumPy
+- Scikit-learn
+- Matplotlib
+- Seaborn
+
+## Modelos Implementados
+- Logistic Regression
+- Decision Tree
+- Random Forest
+- SVM
+- KNN
+
+## Optimización
+- GridSearchCV
+- RandomizedSearchCV
