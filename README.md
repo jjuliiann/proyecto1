@@ -232,3 +232,90 @@ hourlySteps_clean.csv
 ## Optimización
 - GridSearchCV
 - RandomizedSearchCV
+
+# Evaluación Parcial 3 - Solución End-to-End
+
+## Descripción
+
+Este proyecto desarrolla una solución end-to-end para análisis de actividad física. Integra múltiples fuentes de datos, ejecuta un pipeline ETL automatizado, presenta resultados mediante un dashboard interactivo y documenta prácticas profesionales de Git y Docker.
+
+## Fuentes de datos
+
+1. `data/raw/hourlySteps_sucio.csv`: dataset sucio utilizado para limpieza y transformación.
+2. `data/og/hourlySteps_merged.csv`: dataset original consolidado.
+3. `data/processed/hourlySteps.csv`: dataset limpio utilizado por dashboard, API y tests.
+
+## Estructura del proyecto
+
+```text
+data/
+├── raw/
+├── og/
+└── processed/
+
+notebooks/      Notebooks del proyecto
+src/            Scripts auxiliares
+dashboards/     Dashboard interactivo
+api/            API REST
+docker/         Dockerfile y docker-compose
+tests/          Pruebas automatizadas
+docs/           Documentación técnica
+```
+
+## Pipeline ETL
+
+El pipeline realiza:
+
+- Extracción de datos desde CSV.
+- Validación de columnas y tipos.
+- Limpieza de valores nulos.
+- Eliminación de duplicados.
+- Transformación de fechas.
+- Creación de variables como hora, día y fin de semana.
+- Carga de datos procesados.
+
+## Dashboard
+
+El dashboard fue desarrollado con Streamlit y contiene tres vistas:
+
+- Ejecutiva: KPIs principales.
+- Técnica: calidad de datos y estructura.
+- Operativa: análisis por hora y tipo de día.
+
+## API REST
+
+La API fue creada con FastAPI y permite consultar:
+
+- Estado del servicio.
+- KPIs principales.
+- Resumen de columnas.
+- Muestra de datos.
+
+## Docker
+
+El proyecto incluye Dockerfile y docker-compose para ejecutar dashboard y API de forma reproducible.
+
+## Testing
+
+Las pruebas automatizadas verifican:
+
+- Existencia del dataset procesado.
+- Columnas requeridas.
+- Ausencia de nulos.
+- Tipo numérico de `StepTotal`.
+- Ausencia de duplicados.
+
+## Ejecución rápida
+
+```bash
+pip install -r requirements.txt
+streamlit run dashboards/app_streamlit.py
+uvicorn api.api:app --reload
+pytest tests/
+```
+
+## Integrantes
+
+- Vicente Castro
+- Lucas Fernandez
+- Julian Martinez
