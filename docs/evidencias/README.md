@@ -16,3 +16,5 @@ Esta carpeta contiene capturas de pantalla que respaldan el desarrollo y funcion
 10. `10_pull_request.png`: Pull Request creado y fusionado.
 11. `11_commits.png`: historial de commits descriptivos.
 12. `12_readme_final.png`: README final del proyecto.
+13. `13_tablero_trello.png`: tablero Kanban utilizado para organizar el trabajo del proyecto.
+14. `14_tarjeta_trello_checklist.png`: tarjeta del tablero con descripción, checklist y seguimiento de tareas.
