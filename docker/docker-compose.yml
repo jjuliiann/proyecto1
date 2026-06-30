@@ -1,27 +1,64 @@
+# ─────────────────────────────────────────────────────────────────────
+# docker-compose.yml — Proyecto Análisis de Actividad Física
+# ─────────────────────────────────────────────────────────────────────
+# Uso:
+#   cd docker/
+#   docker compose up --build          → levantar todos los servicios
+#   docker compose up --build dashboard → solo dashboard
+#   docker compose down                → detener y eliminar contenedores
+
 version: "3.9"
 
 services:
+
+  # ── Servicio 1: Dashboard Streamlit ──────────────────────────────
   dashboard:
     build:
       context: ..
       dockerfile: docker/Dockerfile
     container_name: dashboard_actividad_fisica
+    restart: unless-stopped
     ports:
       - "8501:8501"
     env_file:
-      - ../.env.example
+      - ../.env
     volumes:
-      - ../data:/app/data
+      # Monta datos locales para persistencia sin reconstruir imagen
+      - ../data:/app/data:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - actividad_red
 
+  # ── Servicio 2: API REST FastAPI ──────────────────────────────────
   api:
     build:
       context: ..
       dockerfile: docker/Dockerfile
     container_name: api_actividad_fisica
-    command: uvicorn api.api:app --host 0.0.0.0 --port 8000
+    restart: unless-stopped
+    # Sobreescribe el CMD del Dockerfile para iniciar FastAPI
+    command: uvicorn api.api:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
     env_file:
-      - ../.env.example
+      - ../.env
     volumes:
-      - ../data:/app/data
+      - ../data:/app/data:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - actividad_red
+
+# ── Red compartida entre servicios ─────────────────────────────────
+networks:
+  actividad_red:
+    driver: bridge
