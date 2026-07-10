@@ -1,10 +1,10 @@
 pandas
 numpy
+scikit-learn
 matplotlib
-plotly
-streamlit
+joblib
 fastapi
 uvicorn
-sqlalchemy
+streamlit
 pytest
 python-dotenv
