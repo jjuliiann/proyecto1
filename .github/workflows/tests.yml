@@ -31,13 +31,13 @@ jobs:
       - name: Verificar dataset final
         shell: bash
         run: |
-          DATASET="data/processed/hourlySteps_eft_final.csv"
+          DATASET="data/proccesed/hourlySteps_eft_final.csv"
 
           echo "Commit utilizado:"
           git log -1 --oneline
 
-          echo "Contenido de data/processed:"
-          ls -lah data/processed || true
+          echo "Contenido de data/proccesed:"
+          ls -lah data/proccesed || true
 
           if [ ! -f "$DATASET" ]; then
             echo "::error::No existe $DATASET en el checkout de la rama actual."
