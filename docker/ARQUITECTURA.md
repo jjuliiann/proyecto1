@@ -1,706 +1,690 @@
-# 🏗️ Arquitectura End-to-End del Proyecto
+[ARQUITECTURA.md](https://github.com/user-attachments/files/29872630/ARQUITECTURA.md)
+# Arquitectura End-to-End del Proyecto
 
 **Proyecto:** Análisis de Actividad Física  
-**Versión:** 2.0  
-**Última actualización:** Junio 2026
+**Versión:** 3.0  
+**Última actualización:** Julio 2026
 
 ---
 
-## 📋 Tabla de Contenidos
+## 1. Descripción general
 
-1. [Descripción General](#descripción-general)
-2. [Arquitectura de Contenedores](#arquitectura-de-contenedores)
-3. [Pipeline ETL](#pipeline-etl)
-4. [Componentes Principales](#componentes-principales)
-5. [Flujo de Datos](#flujo-de-datos)
-6. [Tecnologías Utilizadas](#tecnologías-utilizadas)
-7. [Instrucciones de Instalación](#instrucciones-de-instalación)
-8. [Verificación del Sistema](#verificación-del-sistema)
-9. [Troubleshooting](#troubleshooting)
+Este proyecto implementa una solución end-to-end para el análisis de datos de actividad física.
 
----
+La solución integra:
 
-## 🎯 Descripción General
+- Pipeline ETL para extracción, limpieza, transformación y carga de datos.
+- API REST desarrollada con FastAPI.
+- Dashboard interactivo desarrollado con Streamlit.
+- Modelos de clasificación y regresión con Scikit-learn.
+- Pruebas automatizadas con Pytest.
+- Containerización con Docker y Docker Compose.
+- Documentación técnica y evidencias de resultados.
 
-Este proyecto es una **solución end-to-end** para el análisis de datos de actividad física. Integra:
+El notebook principal del proyecto es:
 
-- **Extracción y Limpieza de Datos (ETL)**: Procesa datos crudos en formato CSV
-- **API REST**: Expone KPIs y datos procesados mediante FastAPI
-- **Dashboard Interactivo**: Visualización en tiempo real con Streamlit
-- **Pruebas Automatizadas**: Validación de calidad de datos
-- **Containerización**: Despliegue reproducible con Docker
-
-### 🎯 Objetivos
-
-✅ Limpiar dataset con valores nulos y duplicados  
-✅ Transformar datos mediante pipeline ETL  
-✅ Generar nuevas variables (feature engineering)  
-✅ Exponer resultados vía API REST  
-✅ Visualizar insights en dashboard interactivo  
-✅ Ejecutar todo en contenedores Docker
-
----
-
-## 🐳 Arquitectura de Contenedores
-
+```text
+notebooks/06_eft_pipeline_ml_end_to_end_v3.ipynb
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      HOST (Tu Computador)                    │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │          Docker Engine (Docker Desktop)               │  │
-│  ├───────────────────────────────────────────────────────┤  │
-│  │                                                       │  │
-│  │  ┌─────────────────┐  ┌──────────────────────────┐  │  │
-│  │  │  dashboard      │  │        api               │  │  │
-│  │  │  (Streamlit)    │  │      (FastAPI)           │  │  │
-│  │  │  Puerto 8501    │  │      Puerto 8000         │  │  │
-│  │  │  Imagen: app    │  │      Imagen: app         │  │  │
-│  │  └─────────────────┘  └──────────────────────────┘  │  │
-│  │           │                       │                  │  │
-│  │           └───────────┬───────────┘                  │  │
-│  │                       │                              │  │
-│  │                 Red bridge: actividad_red            │  │
-│  │                 (172.20.0.0/16)                      │  │
-│  │                       │                              │  │
-│  │           ┌───────────┴───────────┐                 │  │
-│  │           │                       │                 │  │
-│  │      Volumen: data/               │                 │  │
-│  │      (Persistencia de datos)       │                 │  │
-│  │      Modo: read-only               │                 │  │
-│  │                                    │                 │  │
-│  │    Variables de entorno           │                 │  │
-│  │    (.env)                         │                 │  │
-│  │                                    │                 │  │
-│  └────────────────────────────────────────────────────┘  │
-│                                                           │
-└────────────────────────────────────────────────────────────┘
 
+---
+
+## 2. Objetivos
+
+- Limpiar datos con valores nulos, duplicados y registros inválidos.
+- Validar esquemas, tipos de datos y reglas de negocio.
+- Integrar múltiples fuentes de datos.
+- Aplicar transformaciones avanzadas con Pandas.
+- Implementar modelos supervisados de clasificación y regresión.
+- Exponer datos y KPIs mediante una API REST.
+- Visualizar resultados en un dashboard interactivo.
+- Ejecutar los servicios mediante contenedores Docker.
+- Mantener una estructura profesional y reproducible.
+
+---
+
+## 3. Arquitectura general
+
+```text
 ┌─────────────────────────────────────────────────────────────┐
-│                    Acceso desde navegador                     │
-├─────────────────────────────────────────────────────────────┤
-│  Dashboard: http://localhost:8501                            │
-│  API Docs:  http://localhost:8000/docs                       │
-│  API Root:  http://localhost:8000/                           │
+│                         USUARIO                             │
+│                                                             │
+│  Navegador web                                              │
+│  ├── Dashboard Streamlit: http://localhost:8501             │
+│  └── API FastAPI:       http://localhost:8000/docs          │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      DOCKER COMPOSE                         │
+│                                                             │
+│  ┌──────────────────────┐    ┌───────────────────────────┐  │
+│  │ Dashboard            │    │ API REST                  │  │
+│  │ Streamlit            │    │ FastAPI + Uvicorn         │  │
+│  │ Puerto 8501          │    │ Puerto 8000               │  │
+│  └──────────────────────┘    └───────────────────────────┘  │
+│                │                         │                  │
+│                └──────────────┬──────────┘                  │
+│                               │                             │
+│                        Red Docker Bridge                    │
+│                        actividad_red                        │
+│                               │                             │
+│                               ▼                             │
+│                    data/processed/                          │
+│              hourlySteps_eft_final.csv                     │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     PIPELINE ETL + ML                       │
+│                                                             │
+│  CSV crudos → limpieza → transformación → modelos → KPIs    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 📊 Componentes de la Arquitectura
+---
 
-| Componente | Tecnología | Puerto | Función |
-|-----------|-----------|--------|---------|
-| **dashboard** | Streamlit | 8501 | Visualización interactiva de datos |
-| **api** | FastAPI + Uvicorn | 8000 | API REST con endpoints de datos |
-| **Red** | Docker Bridge | - | Comunicación entre contenedores |
-| **Volumen** | Docker Volume | - | Persistencia de datos CSV |
-| **Imagen** | Python 3.11-slim | - | Sistema operativo base |
+## 4. Arquitectura de contenedores
+
+La solución utiliza un único `Dockerfile` para construir una imagen base común.
+
+El archivo `docker-compose.yml` crea dos servicios:
+
+| Servicio | Tecnología | Puerto | Función |
+|---|---|---:|---|
+| `dashboard` | Streamlit | 8501 | Visualización interactiva |
+| `api` | FastAPI + Uvicorn | 8000 | Exposición de endpoints REST |
+
+Ambos servicios acceden al dataset procesado:
+
+```text
+data/processed/hourlySteps_eft_final.csv
+```
+
+La red interna utilizada es:
+
+```text
+actividad_red
+```
+
+La carpeta `data/` puede montarse en modo de solo lectura para evitar modificaciones accidentales.
 
 ---
 
-## 📦 Pipeline ETL
+## 5. Pipeline ETL
 
-```
-┌──────────────────┐
-│   Raw Dataset    │
-│   (sucio.csv)    │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────────────────────────┐
-│      EXTRACCIÓN (Extract)            │
-│  • Leer CSV                          │
-│  • Validar estructura                │
-│  • Verificar columnas                │
-└────────┬─────────────────────────────┘
-         │
-         ▼
-┌──────────────────────────────────────┐
-│      TRANSFORMACIÓN (Transform)      │
-│  • Eliminar duplicados               │
-│  • Completar valores nulos           │
-│  • Convertir tipos de datos          │
-│  • Feature engineering:              │
-│    - Hora del día                    │
-│    - Día de la semana                │
-│    - Fin de semana (bool)            │
-│  • Normalizar datos                  │
-└────────┬─────────────────────────────┘
-         │
-         ▼
-┌──────────────────────────────────────┐
-│      CARGA (Load)                    │
-│  • Guardar CSV procesado             │
-│  • Crear base de datos (SQLite)      │
-│  • Validar integridad                │
-└────────┬─────────────────────────────┘
-         │
-         ▼
-┌──────────────────────────────────────┐
-│   Processed Dataset (limpio)         │
-│   Listo para análisis                │
-└──────────────────────────────────────┘
-```
-
-### 📋 Validaciones del Pipeline
-
-- ✅ Dataset existe
-- ✅ Columnas requeridas presentes
-- ✅ Sin valores nulos (NaN)
-- ✅ Sin duplicados
-- ✅ Tipos de datos correctos (numéricos para StepTotal)
-- ✅ Rango de datos válido
-
----
-
-## 🔧 Componentes Principales
-
-### 1️⃣ Dashboard (Streamlit)
-
-**Ubicación:** `dashboards/app_streamlit.py`  
-**Puerto:** 8501  
-**Tecnología:** Streamlit, Plotly, Pandas
-
-#### Vistas disponibles:
-
-- **📊 Ejecutiva**: KPIs principales
-  - Total de registros
-  - Promedio de pasos
-  - Máximo de pasos
-  - Histograma de distribución
-
-- **🔧 Técnica**: Calidad de datos
-  - Columnas y tipos
-  - Valores nulos
-  - Registros duplicados
-  - Estadísticas descriptivas
-
-- **📈 Operativa**: Análisis temporal
-  - Pasos por hora del día
-  - Pasos por día de semana
-  - Comparación semana vs fin de semana
-  - Tendencias
-
-#### Acceso:
-```bash
-http://localhost:8501
+```text
+hourlySteps_sucio.csv
+        │
+        ▼
+┌──────────────────────────────┐
+│ EXTRACCIÓN                   │
+│ - Lectura con pd.read_csv    │
+│ - Validación de archivos     │
+│ - Validación de columnas     │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ TRANSFORMACIÓN               │
+│ - Conversión de tipos        │
+│ - Eliminación de duplicados  │
+│ - Imputación de nulos        │
+│ - Tratamiento de negativos   │
+│ - Winsorización de outliers  │
+│ - Variables temporales       │
+│ - Vectorización              │
+│ - Pivot y melt               │
+│ - Joins validados            │
+│ - Procesamiento por chunks   │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ MACHINE LEARNING             │
+│ - Clasificación              │
+│ - Regresión                  │
+│ - Pipelines                  │
+│ - Validación cruzada         │
+│ - GridSearchCV               │
+│ - Métricas e importancia     │
+└──────────────┬───────────────┘
+               │
+               ▼
+┌──────────────────────────────┐
+│ CARGA                        │
+│ - CSV procesado              │
+│ - SQLite                     │
+│ - KPIs JSON                  │
+│ - Métricas CSV               │
+│ - Modelos joblib locales     │
+└──────────────┬───────────────┘
+               │
+               ▼
+hourlySteps_eft_final.csv
 ```
 
 ---
 
-### 2️⃣ API REST (FastAPI)
+## 6. Fuentes de datos
 
-**Ubicación:** `api/api.py`  
-**Puerto:** 8000  
-**Tecnología:** FastAPI, Uvicorn, Pydantic
+El notebook utiliza los siguientes archivos:
 
-#### Endpoints disponibles:
-
-| Método | Endpoint | Descripción | Respuesta |
-|--------|----------|-------------|-----------|
-| GET | `/` | Health check | `{"status": "OK"}` |
-| GET | `/kpis` | KPIs principales | Total, promedio, máx, mín pasos |
-| GET | `/resumen-columnas` | Calidad de datos | Columnas, nulos, duplicados |
-| GET | `/muestra` | Primeros 10 registros | Muestra de datos procesados |
-
-#### Documentación interactiva:
-```bash
-http://localhost:8000/docs          # Swagger UI
-http://localhost:8000/redoc         # ReDoc
+```text
+hourlySteps_sucio.csv
+hourlySteps_merged.csv
+hourlySteps.csv
 ```
 
----
-
-### 3️⃣ Datos
-
-**Estructura de carpetas:**
-
-```
-data/
-├── raw/                           # Datos crudos
-│   └── hourlySteps_sucio.csv      # Dataset sin procesar
-├── og/                            # Datos originales
-│   └── hourlySteps_merged.csv     # Dataset consolidado
-└── processed/                      # Datos procesados
-    └── hourlySteps.csv            # Dataset limpio (producción)
-```
-
-**Características:**
-
-- **raw/hourlySteps_sucio.csv**: Dataset original con problemas
-  - 30,000 registros (aprox)
-  - ~20% valores nulos artificiales
-  - ~15% duplicados artificiales
-
-- **processed/hourlySteps.csv**: Dataset transformado
-  - Valores nulos eliminados
-  - Duplicados eliminados
-  - Variables nuevas creadas
-  - Listo para análisis
-
----
-
-### 4️⃣ Pruebas Automatizadas
-
-**Ubicación:** `tests/`  
-**Framework:** Pytest
-
-#### Pruebas incluidas:
+La lectura se realiza de manera explícita:
 
 ```python
-✅ test_dataset_exists()           # Dataset procesado existe
-✅ test_required_columns()          # Columnas necesarias presentes
-✅ test_no_nulls()                  # Sin valores nulos
-✅ test_no_duplicates()             # Sin duplicados
-✅ test_stepstotal_numeric()        # Columna StepTotal es numérica
-```
-
-#### Ejecutar tests:
-```bash
-docker compose exec api pytest tests/ -v
+df_sucio = pd.read_csv("hourlySteps_sucio.csv")
+df_merged = pd.read_csv("hourlySteps_merged.csv")
+df_procesado_existente = pd.read_csv("hourlySteps.csv")
 ```
 
 ---
 
-## 🔄 Flujo de Datos
+## 7. Validaciones del pipeline
 
+El pipeline valida:
+
+- Existencia de archivos.
+- Presencia de columnas requeridas.
+- Dataset no vacío.
+- Tipos de datos correctos.
+- Valores nulos en columnas críticas.
+- Duplicados por usuario y hora.
+- Valores negativos en `StepTotal`.
+- Rango válido de horas.
+- Variable binaria `FinDeSemana`.
+- Integridad de los joins.
+- Existencia de artefactos exportados.
+
+---
+
+## 8. Transformaciones avanzadas
+
+El notebook demuestra:
+
+- Filtros avanzados con múltiples condiciones.
+- Agrupaciones múltiples con `groupby`.
+- Joins con validación `many_to_one`.
+- Tablas dinámicas con `pivot_table`.
+- Cambio de formato con `melt`.
+- Vectorización con NumPy.
+- Broadcasting para variables cíclicas.
+- Procesamiento por fragmentos con `chunksize`.
+- Optimización de memoria mediante tipos compactos.
+
+---
+
+## 9. Modelos de machine learning
+
+### 9.1 Clasificación
+
+Objetivo:
+
+```text
+Predecir si una hora presenta actividad alta.
 ```
-ENTRADA                    PROCESAMIENTO                 SALIDA
-═════════════════════════════════════════════════════════════════════
 
-hourlySteps_sucio.csv  ──►  ETL Pipeline  ──►  hourlySteps.csv
-(crudo, con errores)       (limpieza,           (procesado,
-                           transformación)       listo para uso)
+Modelos utilizados:
 
-                               │
-                ┌──────────────┼──────────────┐
-                │              │              │
-                ▼              ▼              ▼
-           API REST       Dashboard        Pruebas
-           (FastAPI)      (Streamlit)      (Pytest)
-           
-             │              │               │
-             └──────────────┬───────────────┘
-                            │
-                    Usuarios / Stakeholders
-                    
-                    • Ejecutivos (KPIs)
-                    • Técnicos (Calidad)
-                    • Operativos (Análisis)
+- Logistic Regression.
+- Random Forest Classifier.
+
+Métricas:
+
+- Accuracy.
+- Precision.
+- Recall.
+- F1-score.
+- ROC-AUC.
+
+Se aplica:
+
+- Pipeline de Scikit-learn.
+- Imputación.
+- Escalado.
+- Validación cruzada.
+- GridSearchCV.
+- Matriz de confusión.
+- Importancia de variables.
+
+### 9.2 Regresión
+
+Objetivo:
+
+```text
+Estimar la cantidad de pasos en una hora.
+```
+
+Modelos utilizados:
+
+- Linear Regression.
+- Random Forest Regressor.
+
+Métricas:
+
+- MAE.
+- RMSE.
+- R².
+
+---
+
+## 10. API REST
+
+**Ubicación:**
+
+```text
+api/api.py
+```
+
+**Tecnologías:**
+
+- FastAPI.
+- Uvicorn.
+- Pandas.
+- Pydantic.
+
+**Puerto:**
+
+```text
+8000
+```
+
+### Endpoints disponibles
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| GET | `/` | Estado general de la API |
+| GET | `/health` | Disponibilidad y calidad del dataset |
+| GET | `/kpis` | KPIs principales |
+| GET | `/resumen-columnas` | Estructura y calidad de datos |
+| GET | `/muestra` | Muestra configurable |
+| GET | `/actividad-por-hora` | Estadísticas por hora |
+| GET | `/actividad-por-dia` | Estadísticas por día |
+| GET | `/usuario/{usuario_id}` | Resumen por usuario |
+| GET | `/buscar` | Filtros combinados |
+
+### Documentación automática
+
+```text
+Swagger UI: http://localhost:8000/docs
+ReDoc:      http://localhost:8000/redoc
 ```
 
 ---
 
-## 🛠️ Tecnologías Utilizadas
+## 11. Dashboard interactivo
 
-### Lenguaje y Runtime
-- **Python 3.11** (slim): Ligero, eficiente
+**Ubicación:**
 
-### Data Processing
-- **Pandas**: Manipulación y análisis de datos
-- **NumPy**: Cálculos numéricos
-- **Scikit-learn**: Pipeline ETL, normalización
+```text
+dashboards/app_streamlit.py
+```
 
-### Visualización
-- **Streamlit**: Dashboard interactivo
-- **Plotly**: Gráficos interactivos
-- **Matplotlib**: Gráficos estáticos
+**Tecnologías:**
 
-### API y Backend
-- **FastAPI**: Framework web moderno
-- **Uvicorn**: Servidor ASGI
-- **Pydantic**: Validación de datos
+- Streamlit.
+- Pandas.
 
-### Testing
-- **Pytest**: Framework de pruebas
-- **Python-dotenv**: Gestión de variables de entorno
+**Puerto:**
 
-### Containerización
-- **Docker**: Containerización
-- **Docker Compose**: Orquestación de servicios
+```text
+8501
+```
+
+### Funcionalidades
+
+- Filtro por usuario.
+- Filtro por rango de horas.
+- Filtro por tipo de día.
+- Total de registros.
+- Total de usuarios.
+- Promedio de pasos.
+- Hora de mayor actividad.
+- Promedio de pasos por hora.
+- Promedio de pasos por día.
+- Comparación entre día hábil y fin de semana.
+- Ranking de usuarios.
+- Información de calidad.
+- Descarga de datos filtrados.
 
 ---
 
-## 🚀 Instrucciones de Instalación
+## 12. Estructura del proyecto
 
-### Requisitos Previos
-
-```bash
-# 1. Git
-git --version              # Verificar instalación
-
-# 2. Docker Desktop
-docker --version           # Verificar Docker
-docker compose version     # Verificar Docker Compose
+```text
+proyecto1/
+├── api/
+│   └── api.py
+├── dashboards/
+│   └── app_streamlit.py
+├── data/
+│   ├── raw/
+│   │   └── hourlySteps_sucio.csv
+│   ├── og/
+│   │   └── hourlySteps_merged.csv
+│   └── processed/
+│       ├── hourlySteps.csv
+│       └── hourlySteps_eft_final.csv
+├── docker/
+│   ├── ARQUITECTURA.md
+│   ├── Dockerfile
+│   └── docker-compose.yml
+├── docs/
+├── models/
+│   └── .gitkeep
+├── notebooks/
+│   └── 06_eft_pipeline_ml_end_to_end_v3.ipynb
+├── results/
+│   ├── importancia_variables.csv
+│   ├── kpis_eft.json
+│   ├── metricas_clasificacion.csv
+│   └── metricas_regresion.csv
+├── src/
+├── tests/
+├── .env.example
+├── requirements.txt
+└── README.md
 ```
 
-### Paso a Paso
+---
 
-#### 1. Clonar el repositorio
+## 13. Resultados generados
 
-```bash
-git clone https://github.com/jjuliiann/proyecto1.git
-cd proyecto1
+El notebook exporta:
+
+```text
+data/processed/hourlySteps_eft_final.csv
+results/kpis_eft.json
+results/metricas_clasificacion.csv
+results/metricas_regresion.csv
+results/importancia_variables.csv
 ```
 
-#### 2. Configurar variables de entorno
+Los modelos se generan localmente:
 
-```bash
-# Copiar plantilla a .env (Linux/Mac)
-cp .env.example .env
-
-# O en Windows PowerShell:
-copy .env.example .env
-
-# Verificar que se creó correctamente
-cat .env  # Linux/Mac
-type .env # Windows
+```text
+models/clasificador_actividad.joblib
+models/regresor_pasos.joblib
 ```
 
-**Contenido esperado de .env:**
-```
+Los archivos `.joblib` pueden no almacenarse en GitHub debido a su tamaño. Se regeneran ejecutando el notebook principal.
+
+---
+
+## 14. Variables de entorno
+
+Ejemplo de archivo `.env`:
+
+```env
 APP_NAME=Proyecto ETL Dashboard
 ENVIRONMENT=development
 RAW_DATA_PATH=./data/raw/hourlySteps_sucio.csv
-PROCESSED_DATA_PATH=./data/processed/hourlySteps.csv
+PROCESSED_DATA_PATH=./data/processed/hourlySteps_eft_final.csv
 API_PORT=8000
 DASHBOARD_PORT=8501
 ```
 
-#### 3. Asegurar que los datos existan
+---
 
-```bash
-# Verificar que existen los archivos de datos
-ls data/raw/hourlySteps_sucio.csv           # Debe existir
-ls data/og/hourlySteps_merged.csv           # Debe existir
-ls data/processed/hourlySteps.csv           # Será creado por ETL
-```
+## 15. Requisitos
 
-#### 4. Levantar los servicios Docker
+Dependencias principales:
 
-```bash
-# Entrar a la carpeta docker
-cd docker
-
-# Construir e iniciar servicios
-# Primera vez: 2-5 minutos (descarga imágenes, instala dependencias)
-docker compose up --build
-
-# Posteriores: más rápido (reutiliza capas)
-docker compose up
-```
-
-**Salida esperada:**
-```
-dashboard_actividad_fisica  | You can now view your Streamlit app in your browser.
-dashboard_actividad_fisica  | Local URL: http://localhost:8501
-api_actividad_fisica        | Uvicorn running on http://0.0.0.0:8000
-```
-
-#### 5. Verificar servicios (terminal nueva)
-
-```bash
-# En otra terminal, dentro de carpeta docker
-cd docker
-docker compose ps
-
-# Salida esperada:
-# NAME                          STATUS
-# dashboard_actividad_fisica    Up (healthy)
-# api_actividad_fisica          Up (healthy)
+```text
+pandas
+numpy
+scikit-learn
+matplotlib
+joblib
+fastapi
+uvicorn
+streamlit
+pytest
+python-dotenv
 ```
 
 ---
 
-## ✅ Verificación del Sistema
+## 16. Ejecución con Docker
 
-### 1. Verificar Dashboard
-
-```bash
-# Abrir navegador:
-# http://localhost:8501
-
-# Debe mostrar:
-# - Sidebar con "Menú de audiencia"
-# - Opciones: Ejecutiva, Técnica, Operativa
-# - Filtro de día
-# - Gráficos interactivos
-```
-
-### 2. Verificar API
+### 16.1 Clonar el repositorio
 
 ```bash
-# Opción A: Swagger UI (recomendado)
-# http://localhost:8000/docs
-
-# Opción B: Desde terminal
-curl http://localhost:8000/
-
-# Respuesta esperada:
-# {"status":"OK","message":"API de Actividad Física"}
-
-# Probar endpoints
-curl http://localhost:8000/kpis
-curl http://localhost:8000/resumen-columnas
-curl http://localhost:8000/muestra
-```
-
-### 3. Ejecutar Pruebas
-
-```bash
-# Terminal en carpeta docker
-cd docker
-
-# Opción A: Ejecutar tests
-docker compose exec api pytest tests/ -v
-
-# Salida esperada:
-# tests/test_etl.py::test_dataset_exists PASSED
-# tests/test_etl.py::test_required_columns PASSED
-# tests/test_etl.py::test_no_nulls PASSED
-# tests/test_etl.py::test_no_duplicates PASSED
-# tests/test_etl.py::test_stepstotal_numeric PASSED
-# ===== 5 passed in 0.42s =====
-
-# Opción B: Ejecutar con servicio tests
-docker compose run --rm tests
-```
-
-### 4. Ver Logs
-
-```bash
-# Logs en tiempo real
-docker compose logs -f
-
-# Solo dashboard
-docker compose logs -f dashboard
-
-# Solo API
-docker compose logs -f api
-
-# Últimas 100 líneas
-docker compose logs --tail=100
-```
-
----
-
-## 🐛 Troubleshooting
-
-### ❌ Error: "command not found: docker"
-
-**Solución:** Docker no está instalado o no está en PATH
-```bash
-# Descargar e instalar desde:
-# https://www.docker.com/products/docker-desktop
-
-# Reiniciar terminal después de instalar
-```
-
----
-
-### ❌ Error: "Cannot connect to Docker daemon"
-
-**Solución:** Docker Desktop no está corriendo
-
-```bash
-# En Windows/Mac:
-# Abre Docker Desktop manualmente
-
-# En Linux:
-sudo systemctl start docker
-
-# Verificar que funciona:
-docker --version
-```
-
----
-
-### ❌ Error: "Port 8501 is already in use"
-
-**Solución:** Otro proceso está usando el puerto
-
-```bash
-# Encontrar qué proceso usa el puerto
-lsof -i :8501  # Linux/Mac
-netstat -ano | findstr :8501  # Windows
-
-# Matar proceso o usar puerto diferente
-# Opción A: Cambiar puerto en .env
-DASHBOARD_PORT=8502
-
-# Opción B: Matar proceso
-kill -9 <PID>  # Linux/Mac
-taskkill /PID <PID> /F  # Windows
-```
-
----
-
-### ❌ Error: "ModuleNotFoundError: No module named 'pandas'"
-
-**Solución:** Dependencias no instaladas correctamente
-
-```bash
-cd docker
-
-# Reconstruir imagen sin caché
-docker compose build --no-cache
-
-# Levantar nuevamente
-docker compose up
-```
-
----
-
-### ❌ Error: "FileNotFoundError: data/processed/hourlySteps.csv"
-
-**Solución:** El archivo de datos no existe o no fue procesado
-
-```bash
-# Verificar que archivo existe
-ls data/processed/hourlySteps.csv
-
-# Si no existe, ejecutar ETL manualmente
-# (El notebook `notebooks/etl.ipynb` genera este archivo)
-
-# O copiar desde datos originales
-cp data/raw/hourlySteps_sucio.csv data/processed/hourlySteps.csv
-```
-
----
-
-### ❌ Health check fails: "timeout"
-
-**Solución:** Servicios están lentos al iniciar
-
-```bash
-# Esperar 20-30 segundos y verificar estado
-docker compose ps
-
-# Ver logs para ver qué ocurre
-docker compose logs -f dashboard
-docker compose logs -f api
-
-# Si sigue fallando, reconstruir
-docker compose down
-docker compose up --build
-```
-
----
-
-## 🛑 Detener los Servicios
-
-### Opción A: Desde la terminal donde corre docker compose
-
-```bash
-# Presionar Ctrl + C
-Ctrl + C
-```
-
-### Opción B: Desde otra terminal
-
-```bash
-cd docker
-
-# Detener y eliminar contenedores
-docker compose down
-
-# Solo detener (mantener contenedores)
-docker compose stop
-
-# Reanudar contenedores
-docker compose start
-```
-
----
-
-## 📊 Resumen de Comandos Rápidos
-
-```bash
-# ═════════════════════════════════════════════════════════════
-# INSTALACIÓN Y CONFIGURACIÓN
-# ═════════════════════════════════════════════════════════════
-
 git clone https://github.com/jjuliiann/proyecto1.git
 cd proyecto1
+```
+
+### 16.2 Crear archivo `.env`
+
+En Linux o macOS:
+
+```bash
 cp .env.example .env
+```
+
+En Windows PowerShell:
+
+```powershell
+copy .env.example .env
+```
+
+### 16.3 Levantar servicios
+
+Desde la raíz:
+
+```bash
+docker compose -f docker/docker-compose.yml up --build
+```
+
+También puede ejecutarse desde la carpeta `docker`:
+
+```bash
 cd docker
+docker compose up --build
+```
 
-# ═════════════════════════════════════════════════════════════
-# EJECUTAR SERVICIOS
-# ═════════════════════════════════════════════════════════════
+### 16.4 Acceso
 
-docker compose up --build              # Primera vez (lento)
-docker compose up                      # Posteriores (rápido)
-docker compose ps                      # Ver estado
-docker compose logs -f                 # Ver logs en tiempo real
-docker compose down                    # Detener servicios
-
-# ═════════════════════════════════════════════════════════════
-# ACCEDER A SERVICIOS
-# ═════════════════════════════════════════════════════════════
-
-# Dashboard:       http://localhost:8501
-# API Docs:        http://localhost:8000/docs
-# API Root:        http://localhost:8000/
-
-# ═════════════════════════════════════════════════════════════
-# PRUEBAS Y VERIFICACIÓN
-# ═════════════════════════════════════════════════════════════
-
-docker compose exec api pytest tests/ -v
-docker compose run --rm tests
-curl http://localhost:8000/
-
-# ═════════════════════════════════════════════════════════════
-# DESARROLLO
-# ═════════════════════════════════════════════════════════════
-
-docker compose up dashboard            # Solo dashboard
-docker compose up api                  # Solo API
-docker compose restart api             # Reiniciar servicio
-docker compose rm tests                # Eliminar contenedor tests
+```text
+Dashboard: http://localhost:8501
+API:       http://localhost:8000
+Swagger:   http://localhost:8000/docs
 ```
 
 ---
 
-## 📚 Información Adicional
+## 17. Verificación del sistema
 
-### Archivos Clave
+### Verificar contenedores
 
-- **`docker/Dockerfile`**: Definición de imagen (multi-stage, optimizado)
-- **`docker/docker-compose.yml`**: Orquestación de servicios
-- **`docker/.dockerignore`**: Archivos excluidos de imagen
-- **`.env.example`**: Plantilla de variables de entorno
-- **`requirements.txt`**: Dependencias Python
+```bash
+docker compose -f docker/docker-compose.yml ps
+```
 
-### Contribuyentes
+### Ver logs
 
-- **Vicente Castro**
-- **Lucas Fernandez**
-- **Julian Martinez**
+```bash
+docker compose -f docker/docker-compose.yml logs -f
+```
 
-### Licencia
+### Probar API
 
-MIT License (o la licencia que uses)
+```bash
+curl http://localhost:8000/
+curl http://localhost:8000/health
+curl http://localhost:8000/kpis
+curl http://localhost:8000/actividad-por-hora
+```
 
----
+### Ejecutar pruebas
 
-## 🎓 Resumen de la Arquitectura
-
-| Aspecto | Detalle |
-|--------|--------|
-| **Lenguaje** | Python 3.11 |
-| **Containerización** | Docker + Docker Compose |
-| **API** | FastAPI (8000) |
-| **Dashboard** | Streamlit (8501) |
-| **Base de Datos** | CSV + SQLite (opcional) |
-| **Testing** | Pytest |
-| **Red** | Bridge (172.20.0.0/16) |
-| **Volúmenes** | Data (read-only) |
-| **Health Checks** | Habilitados |
-| **Logging** | JSON-file (10MB/3 archivos) |
-| **Seguridad** | Usuario no-root en imagen |
+```bash
+docker compose -f docker/docker-compose.yml exec api pytest tests/ -v
+```
 
 ---
 
-**¡Listo para usar! 🎉**
+## 18. Pruebas automatizadas
+
+**Ubicación:**
+
+```text
+tests/
+```
+
+**Framework:**
+
+```text
+pytest
+```
+
+Pruebas recomendadas:
+
+- Dataset procesado existe.
+- Columnas requeridas presentes.
+- Sin nulos críticos.
+- Sin duplicados.
+- `StepTotal` numérico.
+- API responde correctamente.
+- Endpoints principales retornan HTTP 200.
+- Dashboard puede cargar el dataset.
+
+---
+
+## 19. Flujo de datos
+
+```text
+hourlySteps_sucio.csv
+        │
+        ▼
+Notebook ETL + ML
+        │
+        ├── Limpieza
+        ├── Transformación
+        ├── Validación
+        ├── Clasificación
+        ├── Regresión
+        └── Exportación
+        │
+        ▼
+hourlySteps_eft_final.csv
+        │
+        ├── API FastAPI
+        ├── Dashboard Streamlit
+        ├── Resultados
+        └── Pruebas
+```
+
+---
+
+## 20. Tecnologías utilizadas
+
+| Área | Tecnología |
+|---|---|
+| Lenguaje | Python 3.11 |
+| Procesamiento | Pandas, NumPy |
+| Machine Learning | Scikit-learn |
+| Visualización | Streamlit, Matplotlib |
+| API | FastAPI, Uvicorn |
+| Base de datos | SQLite |
+| Testing | Pytest |
+| Containerización | Docker, Docker Compose |
+| Control de versiones | Git, GitHub |
+
+---
+
+## 21. Troubleshooting
+
+### Error: no se encuentra el dataset
+
+Verifique:
+
+```text
+data/processed/hourlySteps_eft_final.csv
+```
+
+Si no existe, ejecute:
+
+```text
+notebooks/06_eft_pipeline_ml_end_to_end_v3.ipynb
+```
+
+### Error: puerto ocupado
+
+Para API:
+
+```text
+8000
+```
+
+Para dashboard:
+
+```text
+8501
+```
+
+Cambie los puertos en `.env` o en `docker-compose.yml`.
+
+### Error de dependencias
+
+Reconstruya sin caché:
+
+```bash
+docker compose -f docker/docker-compose.yml build --no-cache
+docker compose -f docker/docker-compose.yml up
+```
+
+### Error al conectar con Docker
+
+Compruebe que Docker Desktop esté iniciado:
+
+```bash
+docker --version
+docker compose version
+```
+
+---
+
+## 22. Detener los servicios
+
+```bash
+docker compose -f docker/docker-compose.yml down
+```
+
+Para detener sin eliminar:
+
+```bash
+docker compose -f docker/docker-compose.yml stop
+```
+
+---
+
+## 23. Resumen de puertos
+
+| Servicio | Puerto |
+|---|---:|
+| Dashboard Streamlit | 8501 |
+| API FastAPI | 8000 |
+| Swagger UI | 8000/docs |
+
+---
+
+## 24. Contribuyentes
+
+- Vicente Castro
+- Lucas Fernandez
+- Julian Martinez
+
+---
+
+## 25. Conclusión
+
+La arquitectura implementada permite ejecutar una solución reproducible de ciencia de datos que cubre extracción, transformación, machine learning, API, dashboard, testing y despliegue con Docker.
+
+El diseño separa responsabilidades, facilita el mantenimiento y permite presentar una demostración end-to-end alineada con los requerimientos de la Evaluación Final Transversal.
