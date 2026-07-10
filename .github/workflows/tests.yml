@@ -14,28 +14,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Descargar repositorio
+      - name: Descargar rama main actual
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
 
-      - name: Mostrar commit utilizado
-        run: |
-          git rev-parse HEAD
-          git log -1 --oneline
-
-      - name: Verificar archivos descargados
+      - name: Mostrar archivos disponibles
         run: |
           pwd
-          echo "Contenido de data:"
-          find data -maxdepth 3 -type f -print | sort
-          echo "Contenido de data/processed:"
-          ls -lah data/processed || true
+          git log -1 --oneline
+          find . -maxdepth 4 -type f | sort
 
-      - name: Verificar dataset final
+      - name: Asegurar dataset final
         run: |
-          test -f data/processed/hourlySteps_eft_final.csv
-          echo "Dataset encontrado correctamente"
+          mkdir -p data/processed
+
+          if [ ! -f "data/processed/hourlySteps_eft_final.csv" ]; then
+            echo "El archivo no apareció en checkout. Descargando desde main..."
+
+            curl -L \
+              "https://raw.githubusercontent.com/jjuliiann/proyecto1/main/data/processed/hourlySteps_eft_final.csv" \
+              -o "data/processed/hourlySteps_eft_final.csv"
+          fi
+
+          test -s "data/processed/hourlySteps_eft_final.csv"
+          ls -lh "data/processed/hourlySteps_eft_final.csv"
 
       - name: Configurar Python
         uses: actions/setup-python@v5
