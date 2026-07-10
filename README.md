@@ -10,7 +10,7 @@
 
 ## Integrantes
 
-Viente Castro
+Vicente Castro
 
 Julian Martínez
 
@@ -328,3 +328,36 @@ Los modelos de clasificación y regresión se generan al ejecutar el notebook:
 
 Los archivos `.joblib` no se almacenan en el repositorio debido a su tamaño.  
 Las métricas, KPIs e importancia de variables se encuentran en la carpeta `results/`.
+
+---
+
+# Evaluación Final Transversal — Solución End-to-End
+
+## Notebook principal
+
+El pipeline completo de la Evaluación Final Transversal se encuentra en:
+
+`notebooks/06_eft_pipeline_ml_end_to_end_v3.ipynb`
+
+Este notebook implementa:
+
+- Integración de múltiples fuentes CSV.
+- Validación de esquemas y manejo de errores.
+- Limpieza de valores nulos, duplicados y registros inválidos.
+- Filtros avanzados y agrupaciones múltiples.
+- Joins con validación de cardinalidad.
+- Transformaciones con pivot, melt y vectorización.
+- Procesamiento por chunks para grandes volúmenes.
+- Integración con SQLite.
+- Modelos de clasificación y regresión.
+- Pipelines de Scikit-learn.
+- Validación cruzada y optimización de hiperparámetros.
+- Interpretación de métricas y variables.
+- Exportación de KPIs y resultados.
+
+## Archivos utilizados
+
+```text
+hourlySteps_sucio.csv
+hourlySteps_merged.csv
+hourlySteps.csv
