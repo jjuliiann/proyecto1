@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   tests:
@@ -15,6 +16,26 @@ jobs:
     steps:
       - name: Descargar repositorio
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mostrar commit utilizado
+        run: |
+          git rev-parse HEAD
+          git log -1 --oneline
+
+      - name: Verificar archivos descargados
+        run: |
+          pwd
+          echo "Contenido de data:"
+          find data -maxdepth 3 -type f -print | sort
+          echo "Contenido de data/processed:"
+          ls -lah data/processed || true
+
+      - name: Verificar dataset final
+        run: |
+          test -f data/processed/hourlySteps_eft_final.csv
+          echo "Dataset encontrado correctamente"
 
       - name: Configurar Python
         uses: actions/setup-python@v5
