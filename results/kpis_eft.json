@@ -1,0 +1,12 @@
+{
+  "fecha_generacion": "2026-07-10T02:07:33",
+  "registros": 22179,
+  "usuarios": 34,
+  "promedio_pasos_hora": 210.93,
+  "mediana_pasos_hora": 10.0,
+  "hora_mayor_actividad": 18,
+  "f1_clasificacion": 0.6799,
+  "roc_auc": 0.8872,
+  "mae_regresion_pasos": 158.6,
+  "r2_regresion": 0.4326
+}
