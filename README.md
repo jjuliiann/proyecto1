@@ -319,3 +319,12 @@ pytest tests/
 - Vicente Castro
 - Lucas Fernandez
 - Julian Martinez
+
+## Modelos entrenados
+
+Los modelos de clasificación y regresión se generan al ejecutar el notebook:
+
+`notebooks/06_eft_pipeline_ml_end_to_end_v3.ipynb`
+
+Los archivos `.joblib` no se almacenan en el repositorio debido a su tamaño.  
+Las métricas, KPIs e importancia de variables se encuentran en la carpeta `results/`.
