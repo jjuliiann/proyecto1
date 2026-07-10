@@ -11,46 +11,88 @@ on:
 
 jobs:
   tests:
+    name: Ejecutar pruebas
     runs-on: ubuntu-latest
 
     steps:
-      - name: Descargar rama main actual
+      - name: Descargar repositorio y archivos LFS
         uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 0
+          lfs: true
 
-      - name: Mostrar archivos disponibles
+      - name: Completar descarga de Git LFS
+        shell: bash
         run: |
-          pwd
+          git lfs install
+          git lfs pull
+          git lfs checkout
+
+      - name: Verificar dataset final
+        shell: bash
+        run: |
+          DATASET="data/processed/hourlySteps_eft_final.csv"
+
+          echo "Commit utilizado:"
           git log -1 --oneline
-          find . -maxdepth 4 -type f | sort
 
-      - name: Asegurar dataset final
-        run: |
-          mkdir -p data/processed
+          echo "Contenido de data/processed:"
+          ls -lah data/processed || true
 
-          if [ ! -f "data/processed/hourlySteps_eft_final.csv" ]; then
-            echo "El archivo no apareció en checkout. Descargando desde main..."
-
-            curl -L \
-              "https://raw.githubusercontent.com/jjuliiann/proyecto1/main/data/processed/hourlySteps_eft_final.csv" \
-              -o "data/processed/hourlySteps_eft_final.csv"
+          if [ ! -f "$DATASET" ]; then
+            echo "::error::No existe $DATASET en el checkout de la rama actual."
+            exit 1
           fi
 
-          test -s "data/processed/hourlySteps_eft_final.csv"
-          ls -lh "data/processed/hourlySteps_eft_final.csv"
+          if [ ! -s "$DATASET" ]; then
+            echo "::error::El archivo $DATASET está vacío."
+            exit 1
+          fi
+
+          PRIMERA_LINEA="$(head -n 1 "$DATASET")"
+          echo "Primera línea del dataset:"
+          echo "$PRIMERA_LINEA"
+
+          if echo "$PRIMERA_LINEA" | grep -qi "404: Not Found"; then
+            echo "::error::El archivo contiene una respuesta 404 y no un CSV válido."
+            exit 1
+          fi
+
+          if echo "$PRIMERA_LINEA" | grep -q "version https://git-lfs.github.com/spec/v1"; then
+            echo "::error::El archivo sigue siendo un puntero de Git LFS."
+            exit 1
+          fi
+
+          if ! echo "$PRIMERA_LINEA" | grep -q "Id"; then
+            echo "::error::El encabezado no contiene la columna Id."
+            exit 1
+          fi
+
+          if ! echo "$PRIMERA_LINEA" | grep -q "ActivityHour"; then
+            echo "::error::El encabezado no contiene la columna ActivityHour."
+            exit 1
+          fi
+
+          if ! echo "$PRIMERA_LINEA" | grep -q "StepTotal"; then
+            echo "::error::El encabezado no contiene la columna StepTotal."
+            exit 1
+          fi
+
+          echo "Dataset verificado correctamente."
+          du -h "$DATASET"
 
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
-      - name: Actualizar pip
-        run: python -m pip install --upgrade pip
+          cache: pip
 
       - name: Instalar dependencias
-        run: pip install -r requirements.txt
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Ejecutar pruebas
+        shell: bash
         run: pytest tests/ -v
