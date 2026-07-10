@@ -1,30 +1,115 @@
-import pandas as pd
 from pathlib import Path
 
-DATA_PATH = Path("data/processed/hourlySteps.csv")
+import pandas as pd
 
-def test_archivo_existe():
-    assert DATA_PATH.exists(), "El archivo limpio no existe en data/processed"
 
-def test_columnas_requeridas():
+DATA_PATH = Path("data/processed/hourlySteps_eft_final.csv")
+
+COLUMNAS_REQUERIDAS = {
+    "Id",
+    "ActivityHour",
+    "StepTotal",
+    "Hora",
+    "Dia",
+    "FinDeSemana",
+}
+
+
+def cargar_datos() -> pd.DataFrame:
+    assert DATA_PATH.exists(), (
+        "No existe data/processed/hourlySteps_eft_final.csv"
+    )
+
     df = pd.read_csv(DATA_PATH)
 
-    columnas_requeridas = ["Id", "ActivityHour", "StepTotal"]
+    assert not df.empty, "El dataset procesado está vacío."
 
-    for columna in columnas_requeridas:
-        assert columna in df.columns, f"Falta la columna requerida: {columna}"
+    return df
 
-def test_sin_nulos_en_columnas_principales():
-    df = pd.read_csv(DATA_PATH)
 
-    assert df[["Id", "ActivityHour", "StepTotal"]].isnull().sum().sum() == 0
+def test_dataset_exists():
+    assert DATA_PATH.exists()
 
-def test_step_total_numerico():
-    df = pd.read_csv(DATA_PATH)
 
-    assert pd.api.types.is_numeric_dtype(df["StepTotal"])
+def test_dataset_not_empty():
+    df = cargar_datos()
+    assert len(df) > 0
 
-def test_sin_duplicados():
-    df = pd.read_csv(DATA_PATH)
 
-    assert df.duplicated().sum() == 0
+def test_required_columns():
+    df = cargar_datos()
+
+    faltantes = COLUMNAS_REQUERIDAS - set(df.columns)
+
+    assert not faltantes, (
+        f"Faltan columnas requeridas: {sorted(faltantes)}"
+    )
+
+
+def test_no_nulls_in_critical_columns():
+    df = cargar_datos()
+
+    columnas_criticas = [
+        "Id",
+        "ActivityHour",
+        "StepTotal",
+        "Hora",
+    ]
+
+    assert df[columnas_criticas].isna().sum().sum() == 0
+
+
+def test_no_duplicate_user_hour():
+    df = cargar_datos()
+
+    duplicados = df.duplicated(
+        subset=["Id", "ActivityHour"]
+    ).sum()
+
+    assert duplicados == 0
+
+
+def test_step_total_is_numeric():
+    df = cargar_datos()
+
+    pasos = pd.to_numeric(
+        df["StepTotal"],
+        errors="coerce",
+    )
+
+    assert pasos.notna().all()
+
+
+def test_step_total_has_valid_range():
+    df = cargar_datos()
+
+    pasos = pd.to_numeric(
+        df["StepTotal"],
+        errors="coerce",
+    )
+
+    assert (pasos >= 0).all()
+
+
+def test_hour_range():
+    df = cargar_datos()
+
+    horas = pd.to_numeric(
+        df["Hora"],
+        errors="coerce",
+    )
+
+    assert horas.between(0, 23).all()
+
+
+def test_weekend_is_binary():
+    df = cargar_datos()
+
+    valores = set(
+        pd.to_numeric(
+            df["FinDeSemana"],
+            errors="coerce",
+        ).dropna().unique()
+    )
+
+    assert valores.issubset({0, 1})
